@@ -14,9 +14,9 @@ export interface RollingProps {
   onChange?: (val: boolean) => void
   onDomChange?: (currDistance: number, MutationObserver: MutationRecord[]) => void
 }
-
+const prefixCls = 'fd-rolling';
 const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) => {
-  const { children, time = 10, direction = 'y', value, action = 'hover', speed = 1, isDragControl, scrollAble, onDomChange, onChange } = props
+  const { children, time = 10, direction = 'y', value, action = 'hover', speed, isDragControl, scrollAble, onDomChange, onChange } = props
   // 是否滚动
   const [isRolling, setRolling] = useState<boolean>(value ?? true)
   // 动画名称
@@ -25,22 +25,28 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
   const rollingBodyRef = useRef<HTMLDivElement>(null)
   const rollingBoxBodyRef = useRef<HTMLDivElement>(null)
   const [forcedStop, setForcedStop] = useState(false) // 是否强制无需滚动(当内容没有占满轮播显示空间时)
-  const hasAnimation = useRef(false)
+  const [hasAnimation, setHasAnimation] = useState(false)
   const observer = useRef<null | MutationObserver>(null) // dom 监听
   const distanceRef = useRef(0) // 滚的距离
 
+  const checkDistance = (MutationObserver?: MutationRecord[]) => {
+    const { fatherDistance, currDistance } = getDistance()
+    if (currDistance === distanceRef.current) return
+    distanceRef.current = currDistance
+    if(MutationObserver && onDomChange) onDomChange(currDistance, MutationObserver)
+    setForcedStop(fatherDistance > currDistance)
+    if (!isRolling) return
+    changeForcedStop(fatherDistance > currDistance)
+  }
+  const observerRefCheckDistance = useRef<(MutationObserver?: MutationRecord[]) => void>(checkDistance)
+  observerRefCheckDistance.current = checkDistance
+
+
+
   useEffect(() => {
-    if(typeof value === 'boolean') changeRolling(value)
-  }, [value])
-  
-  useEffect(() => {
-    if(!hasAnimation.current && isRolling) controlAnimation()
-  }, [isRolling])
-  
-  useEffect(() => {
-    checkDistance()
+    observerRefCheckDistance.current()
     observer.current = new MutationObserver((MutationObserver) => {
-        checkDistance(MutationObserver)
+      observerRefCheckDistance.current(MutationObserver)
     })
     if (rollingBodyRef.current) {
       (observer.current as MutationObserver).observe(rollingBodyRef.current, {
@@ -56,34 +62,52 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
     }
   }, [])
 
-  const changeRolling = (val: boolean) => {
-    if (typeof value === 'boolean') return
-    setRolling(val)
-  }
 
-  const checkDistance = (MutationObserver?: MutationRecord[]) => {
-      const { fatherDistance, currDistance } = getDistance()
-      if (currDistance === distanceRef.current) return
-      distanceRef.current = currDistance
-      if(MutationObserver && onDomChange) onDomChange(currDistance, MutationObserver)
-      if (!isRolling) return
-      changeForcedStop(fatherDistance > currDistance)
-  }
 
-  const startAnimation = () => {
-      changeRolling(true)
-      controlAnimation()
-  }
+  useEffect(() => {
+    if(typeof value === 'boolean') changeRolling(value)
+  }, [value])
+  
+  useEffect(() => {
+    if(!hasAnimation && isRolling) controlAnimation()
+  }, [isRolling, hasAnimation])
+
+  useEffect(() => {
+    if (forcedStop) clearAnimation()
+    else controlAnimation()
+  }, [forcedStop])
+  
   // 获取dom大小
   const getDistance = () => {
       const dom = rollingBodyRef.current
       const domFather = rollingBoxBodyRef.current
-      if(!dom || !domFather)  return { currDistance: 0, fatherDistance: 0 }
+      if (!dom || !domFather) return { currDistance: 0, fatherDistance: 0 }
       const currDistance = (direction === 'x' ? dom.offsetWidth : dom.offsetHeight) / (forcedStop ? 1 : 2)
       const fatherDistance = (direction === 'x' ? domFather.offsetWidth : domFather.offsetHeight)
       return { fatherDistance, currDistance }
   }
   
+
+  const animationTime = useMemo(() => {
+    const { currDistance } = getDistance()
+    if (typeof speed === 'number') {
+      return currDistance / speed
+    }
+    return time
+  }, [time, speed, isRolling, forcedStop, hasAnimation])
+
+  const changeRolling = (val: boolean) => {
+    if (typeof value === 'boolean') return
+    setRolling(val)
+  }
+
+
+
+  const startAnimation = () => {
+      changeRolling(true)
+      controlAnimation()
+  }
+
   
   const clearAnimation = () => {
       const style = document.styleSheets[0]
@@ -105,7 +129,7 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
       if (!isRolling || !style) return
       dom.style.animationPlayState = '' // 继续动画
       style.insertRule(`@keyframes ${animationNameRef.current} {0%{ transform: translateX(0%);}100%{transform: translate${direction === 'x' ? 'X' : 'Y'}(-${currDistance}px);}}`, 0)
-      hasAnimation.current = true
+      if(!hasAnimation) setHasAnimation(true)
   }
 
 
@@ -143,11 +167,8 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
 
   const changeForcedStop = (val: boolean) => {
       setForcedStop(val)
-      if (val) clearAnimation()
-      else controlAnimation()
       return forcedStop
   }
-
 
   /**
    * 鼠标按下边
@@ -159,15 +180,15 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
       const animation = element.getAnimations()
       const startDis = direction === 'y' ? e.clientY : e.clientX
       const currDistance = getDistance().currDistance
-      const currSpeed = currDistance / (time * 1000)
-      let rememberDis: number
+      const currSpeed = currDistance / (animationTime)
+      let rememberTime: number
       const mouseMoveHandler = (currEvent: MouseEvent) => {
         const endDis = direction === 'y' ? currEvent.clientY : currEvent.clientX
         const distance = endDis - startDis
         animation.forEach((item) => {
-          if (!rememberDis) rememberDis = (item.currentTime as number) || 0
-          const currTime = rememberDis - (distance / currSpeed)
-          item.currentTime = currTime < 0 ? time * 1000 + currTime : currTime
+          if (!rememberTime) rememberTime = (item.currentTime as number) || 0
+          const currTime = rememberTime - (distance / currSpeed)
+          item.currentTime = (currTime < 0 ? animationTime + currTime : currTime) * 1000
         })
       }
       document.addEventListener('mousemove', mouseMoveHandler)
@@ -194,10 +215,6 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
       })
   }
 
-  const animationTime = useMemo(() => {
-    return time
-  }, [time])
-
   useImperativeHandle(ref, () => ({
     clearAnimation,
     controlAnimation,
@@ -205,15 +222,16 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
     startAnimation,
     animationName: animationNameRef.current,
     isRolling,
-    forcedStop
+    forcedStop,
+    checkDistance
   }))
   
   return (
-    <div className="rolling-box" ref={rollingBoxBodyRef}>
+    <div className={prefixCls} ref={rollingBoxBodyRef}>
       <div
         id={animationNameRef.current}
         ref={rollingBodyRef}
-        className={`rolling-offset-box ${direction === 'x' ? 'fpi-el-rolling-flex' : ''}`}
+        className={`${prefixCls}-box ${direction === 'x' ? prefixCls + '-flex' : ''}`}
         onMouseEnter={mouseenter}
         onMouseLeave={mouseleave}
         onMouseDown={onMouseDownBorder}
@@ -227,7 +245,7 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
           width: direction === 'y' ? '100%' : undefined,
         }}>
         {children}
-        {children}
+        {!forcedStop && children}
       </div>
     </div>
   )
