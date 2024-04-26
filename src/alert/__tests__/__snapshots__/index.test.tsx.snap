@@ -2,7 +2,7 @@
 
 exports[`<Alert /> should render alert with type 1`] = `
 <div
-  class="happy-alert"
+  class="fd-alert"
   style="background: rgb(83, 82, 237);"
 >
   info
@@ -11,7 +11,7 @@ exports[`<Alert /> should render alert with type 1`] = `
 
 exports[`<Alert /> should render alert with type 2`] = `
 <div
-  class="happy-alert"
+  class="fd-alert"
   style="background: rgb(255, 165, 2);"
 >
   warning
@@ -20,7 +20,7 @@ exports[`<Alert /> should render alert with type 2`] = `
 
 exports[`<Alert /> should render alert with type 3`] = `
 <div
-  class="happy-alert"
+  class="fd-alert"
   style="background: rgb(46, 213, 115);"
 >
   positive
@@ -29,7 +29,7 @@ exports[`<Alert /> should render alert with type 3`] = `
 
 exports[`<Alert /> should render alert with type 4`] = `
 <div
-  class="happy-alert"
+  class="fd-alert"
   style="background: rgb(255, 71, 87);"
 >
   negative
@@ -39,7 +39,7 @@ exports[`<Alert /> should render alert with type 4`] = `
 exports[`<Alert /> should render default 1`] = `
 <div>
   <div
-    class="happy-alert"
+    class="fd-alert"
     style="background: rgb(83, 82, 237);"
   >
     default

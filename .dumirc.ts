@@ -1,3 +1,10 @@
+/*
+ * @Author: mjh
+ * @Date: 2024-04-26 14:41:21
+ * @LastEditors: mjh
+ * @LastEditTime: 2024-04-26 17:37:02
+ * @Description: 
+ */
 import { defineConfig } from 'dumi';
 import path from 'path';
 
@@ -13,7 +20,7 @@ if (process.env.NODE_ENV === 'production' && process.env.PREVIEW !== '1') {
 export default defineConfig({
   base,
   publicPath,
-  title: 'Happy UI',
+  title: 'Freedom UI',
   outputPath: 'doc-site',
   resolve: {
     docDirs: ['docs'],
