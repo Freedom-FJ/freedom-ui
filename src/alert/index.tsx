@@ -1,3 +1,10 @@
+/*
+ * @Author: mjh
+ * @Date: 2024-04-26 14:41:49
+ * @LastEditors: mjh
+ * @LastEditTime: 2024-04-26 16:37:10
+ * @Description: 
+ */
 import React from 'react';
 
 export interface AlertProps {
@@ -10,7 +17,7 @@ export interface AlertProps {
 
 export type KindMap = Record<Required<AlertProps>['kind'], string>;
 
-const prefixCls = 'happy-alert';
+const prefixCls = 'fd-alert';
 
 const kinds: KindMap = {
   info: '#5352ED',
