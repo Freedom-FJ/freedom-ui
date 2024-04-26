@@ -6,7 +6,7 @@
 - [React 组件库搭建指南（四）：单元测试](https://github.com/worldzhao/blog/issues/6)
 - [React 组件库搭建指南（五）：标准化发布流程](https://github.com/worldzhao/blog/issues/7)
 
-[🚀 在线预览](https://worldzhao.github.io/react-ui-library-tutorial)
+[🚀 在线预览](https://freedom-fj.github.io/freedom-ui/)
 
 🚆 本地预览
 
