@@ -5,6 +5,8 @@ export interface RollingProps {
   children?: React.ReactNode
   direction?: 'x' | 'y',
   value?: boolean,
+  className?: string
+  style?: React.CSSProperties
   // 滚动时长
   time?: number,
   action?: 'hover' | 'click' | 'dblclick' | 'none',
@@ -16,7 +18,7 @@ export interface RollingProps {
 }
 const prefixCls = 'fd-rolling';
 const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) => {
-  const { children, time = 10, direction = 'y', value, action = 'hover', speed, isDragControl, scrollAble, onDomChange, onChange } = props
+  const { style, className, children, time = 10, direction = 'y', value, action = 'hover', speed, isDragControl, scrollAble, onDomChange, onChange } = props
   // 是否滚动
   const [isRolling, setRolling] = useState<boolean>(value ?? true)
   // 动画名称
@@ -97,7 +99,7 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
   }, [time, speed, isRolling, forcedStop, hasAnimation])
 
   const changeRolling = (val: boolean) => {
-    if (typeof value === 'boolean') return
+    if (typeof value !== 'boolean') return
     setRolling(val)
   }
 
@@ -110,12 +112,12 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
 
   
   const clearAnimation = () => {
-      const style = document.styleSheets[0]
-      if (!style) return
-      const styleArray: any[] = [].slice.call(style.cssRules) // 将伪数组变成数组
+      const currStyle = document.styleSheets[0]
+      if (!currStyle) return
+      const styleArray: any[] = [].slice.call(currStyle.cssRules) // 将伪数组变成数组
       const index = styleArray.findIndex(item => item.name === animationNameRef.current)
-      if (index !== -1) style.deleteRule(index) // 如果有此动画就先删除
-      return style
+      if (index !== -1) currStyle.deleteRule(index) // 如果有此动画就先删除
+      return currStyle
   }
 
 
@@ -125,10 +127,10 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
       if (!dom) return
       const { currDistance } = getDistance()
       distanceRef.current = currDistance
-      const style = clearAnimation()
-      if (!isRolling || !style) return
+      const currStyle = clearAnimation()
+      if (!isRolling || !currStyle) return
       dom.style.animationPlayState = '' // 继续动画
-      style.insertRule(`@keyframes ${animationNameRef.current} {0%{ transform: translateX(0%);}100%{transform: translate${direction === 'x' ? 'X' : 'Y'}(-${currDistance}px);}}`, 0)
+      currStyle.insertRule(`@keyframes ${animationNameRef.current} {0%{ transform: translateX(0%);}100%{transform: translate${direction === 'x' ? 'X' : 'Y'}(-${currDistance}px);}}`, 0)
       if(!hasAnimation) setHasAnimation(true)
   }
 
@@ -187,8 +189,8 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
         const distance = endDis - startDis
         animation.forEach((item) => {
           if (!rememberTime) rememberTime = (item.currentTime as number) || 0
-          const currTime = rememberTime - (distance / currSpeed)
-          item.currentTime = (currTime < 0 ? animationTime + currTime : currTime) * 1000
+          const currTime = rememberTime - (distance / currSpeed * 1000)
+          item.currentTime = (currTime < 0 ? animationTime * 1000 + currTime : currTime) 
         })
       }
       document.addEventListener('mousemove', mouseMoveHandler)
@@ -231,19 +233,21 @@ const Rolling: React.FC<RollingProps> = forwardRef((props: RollingProps, ref) =>
       <div
         id={animationNameRef.current}
         ref={rollingBodyRef}
-        className={`${prefixCls}-box ${direction === 'x' ? prefixCls + '-flex' : ''}`}
+        className={`${className} ${prefixCls}-box ${direction === 'x' ? prefixCls + '-flex' : ''}`}
+        style={{
+          ...(style || {}),
+          animation: `${animationNameRef.current} ${animationTime}s linear infinite`,
+          animationPlayState: isRolling ? 'running' : 'paused',
+          height: direction === 'x' ? '100%' : undefined,
+          width: direction === 'y' ? '100%' : undefined,
+        }}
         onMouseEnter={mouseenter}
         onMouseLeave={mouseleave}
         onMouseDown={onMouseDownBorder}
         onClick={handleClick}
         onDoubleClick={handleDblclick}
         onWheel={mousewheel}
-        style={{
-          animation: `${animationNameRef.current} ${animationTime}s linear infinite`,
-          animationPlayState: isRolling ? 'running' : 'paused',
-          height: direction === 'x' ? '100%' : undefined,
-          width: direction === 'y' ? '100%' : undefined,
-        }}>
+      >
         {children}
         {!forcedStop && children}
       </div>

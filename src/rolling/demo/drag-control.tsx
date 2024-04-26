@@ -2,7 +2,7 @@
  * @Author: mjh
  * @Date: 2024-04-25 15:47:47
  * @LastEditors: mjh
- * @LastEditTime: 2024-04-26 16:21:32
+ * @LastEditTime: 2024-04-26 16:21:24
  * @Description: 
  */
 import React from 'react';
@@ -12,7 +12,7 @@ import './index.less'
 export default function Basic() {
   return (
     <div className='rolling-demo'>
-      <Rolling time={5} >
+      <Rolling speed={50} isDragControl>
         <div className='model-box'>
           {new Array(5).fill(0).map((_, index) => {
             return <div className="rolling-item"  key={index}>hello world {index}</div>
