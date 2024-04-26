@@ -3,13 +3,13 @@
   "version": "1.2.0",
   "description": "A React UI Library.",
   "keywords": [],
-  "homepage": "https://github.com/worldzhao/react-ui-library-tutorial#readme",
+  "homepage": "https://github.com/Freedom-FJ/freedom-ui#readme",
   "bugs": {
-    "url": "https://github.com/worldzhao/react-ui-library-tutorial/issues"
+    "url": "https://github.com/Freedom-FJ/freedom-ui/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/worldzhao/react-ui-library-tutorial.git"
+    "url": "git+https://github.com/Freedom-FJ/freedom-ui.git"
   },
   "license": "ISC",
   "main": "lib/index.js",
